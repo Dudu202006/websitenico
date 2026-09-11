@@ -1,0 +1,9 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Un seul nom (DuckDNS, etc.). Pour ltdd.com + www, ajoutez : www.{$APP_DOMAIN} {
+{$APP_DOMAIN} {
+	encode gzip
+	reverse_proxy frontend:80
+}
