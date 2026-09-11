@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: le-temps-delice-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-boulangerie}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boulangerie123}
+      POSTGRES_DB: ${POSTGRES_DB:-le_temps_delice}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boulangerie -d le_temps_delice"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: le-temps-delice-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-boulangerie}:${POSTGRES_PASSWORD:-boulangerie123}@postgres:5432/${POSTGRES_DB:-le_temps_delice}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-changez-moi-en-production}
+      PORT: 3001
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost,http://127.0.0.1,http://localhost:8080,https://ltdd-delice.duckdns.org}
+      SEED_DATABASE: ${SEED_DATABASE:-true}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: le-temps-delice-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:
+  uploads_data:

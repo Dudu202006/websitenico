@@ -1,0 +1,48 @@
+# Production — domaine gratuit https://ltdd-delice.duckdns.org (DuckDNS + Caddy / Let's Encrypt)
+#
+# Voir docs/GITHUB-ET-MISE-EN-LIGNE.md
+#
+#   cp .env.example .env   # remplir JWT_SECRET, POSTGRES_PASSWORD, ACME_EMAIL, DUCKDNS_TOKEN
+#   ./scripts/deploy-production.sh
+
+services:
+  postgres:
+    ports: !reset []
+
+  backend:
+    environment:
+      SEED_DATABASE: ${SEED_DATABASE:-false}
+
+  frontend:
+    ports: []
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: le-temps-delice-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-ltdd-delice.duckdns.org}
+      ACME_EMAIL: ${ACME_EMAIL:?Definir ACME_EMAIL dans .env pour HTTPS}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
+  duckdns:
+    image: lukechilds/duckdns:latest
+    container_name: le-temps-delice-duckdns
+    restart: unless-stopped
+    environment:
+      SUBDOMAINS: ${DUCKDNS_SUBDOMAIN:-ltdd-delice}
+      TOKEN: ${DUCKDNS_TOKEN}
+    profiles:
+      - duckdns
+
+volumes:
+  caddy_data:
+  caddy_config:
