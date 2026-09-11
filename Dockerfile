@@ -1,19 +1,16 @@
-FROM node:22-alpine
-
-RUN apk add --no-cache openssl
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
 
-COPY prisma ./prisma
-RUN npx prisma generate
+COPY . .
+RUN npm run build
 
-COPY src ./src
-COPY docker-entrypoint.sh ./
-RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
+FROM nginx:alpine
 
-EXPOSE 3001
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
 
-ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
+EXPOSE 80

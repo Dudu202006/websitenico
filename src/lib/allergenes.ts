@@ -1,0 +1,15 @@
+export const ALLERGENES_COMMUNS = [
+  'Gluten',
+  'Lactose',
+  'Œufs',
+  'Arachides',
+  'Fruits à coque',
+  'Soja',
+  'Sésame',
+  'Céleri',
+  'Moutarde',
+  'Lupin',
+  'Mollusques',
+  'Crustacés',
+  'Poisson',
+] as const;
